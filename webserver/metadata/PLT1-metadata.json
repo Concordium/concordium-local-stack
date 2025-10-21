@@ -1,0 +1,12 @@
+{
+  "name": "TESTTTT",
+  "description": "STESATASTASTSA",
+  "symbol": "PLT1",
+  "decimals": 6,
+  "thumbnail": {
+    "url": "http://localhost:7020/images/plt1.png"
+  },
+  "display": {
+    "url": "http://localhost:7020/images/plt1.png"
+  }
+}

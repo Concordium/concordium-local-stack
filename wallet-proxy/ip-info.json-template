@@ -1,0 +1,49 @@
+[{
+    "arsInfos": {
+      "1": {
+        "arDescription": {
+          "description": "",
+          "name": "Generated AR 1",
+          "url": ""
+        },
+        "arIdentity": 1,
+    "arPublicKey": "TBD"
+      },
+      "2": {
+        "arDescription": {
+          "description": "",
+          "name": "Generated AR 2",
+          "url": ""
+        },
+        "arIdentity": 2,
+    "arPublicKey": "TBD"
+      },
+      "3": {
+        "arDescription": {
+          "description": "",
+          "name": "Generated AR 3",
+          "url": ""
+        },
+        "arIdentity": 3,
+    "arPublicKey": "TBD"
+      }
+    },
+    "ipInfo": {
+      "ipCdiVerifyKey": "TBD",
+      "ipDescription": {
+        "description": "",
+        "name": "Generated IP 0",
+        "url": ""
+      },
+      "ipIdentity": 0,
+      "ipVerifyKey": "TBD"
+    },
+    "metadata": {
+      "icon": "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",
+      "issuanceStart": "http://localhost:7011/api/v1/identity",
+      "recoveryStart": "http://localhost:7011/api/v1/recover",
+      "support": "support@concordium.software"
+    }
+  }
+
+]

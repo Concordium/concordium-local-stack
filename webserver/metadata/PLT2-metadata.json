@@ -1,0 +1,12 @@
+{
+  "name": "DFASDASDSADAS",
+  "description": "FASDFASFSAFASFAS",
+  "symbol": "PLT2",
+  "decimals": 6,
+  "thumbnail": {
+    "url": "http://localhost:7020/images/plt1.png"
+  },
+  "display": {
+    "url": "http://localhost:7020/images/plt1.png"
+  }
+}

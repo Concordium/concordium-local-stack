@@ -1,0 +1,31 @@
+{
+  "effectiveTime": 0,
+  "seqNumber": 0,
+  "timeout": 0,
+  "payload": {
+    "updateType": "createPLT",
+    "update": {
+      "tokenId": "",
+      "tokenModule": "5c5c2645db84a7026d78f2501740f60a8ccb8fae5c166dc2428077fd9a699a4a",
+      "decimals": 0,
+      "initializationParameters": {
+        "name": "First testing PLT",
+        "metadata": {
+          "url": "http://localhost:7020/metadata/-metadata.json"
+        },
+        "initialSupply": {
+          "value": "0",
+          "decimals": 0
+        },
+        "governanceAccount": {
+          "type": "account",
+          "address": ""
+        },
+        "allowList": false,
+        "denyList": true,
+        "mintable": true,
+        "burnable": true
+      }
+    }
+  }
+}

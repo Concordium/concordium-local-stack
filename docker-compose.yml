@@ -1,0 +1,276 @@
+#  Configuration for a single node network with IDP
+services:
+  # The validator that runs this network
+  local-node:
+    container_name: local-node
+    image: concordium/testnet-node:9.0.7-3
+    platform: linux/amd64
+    pull_policy: always
+    environment:
+      # Validator credentials file
+      - CONCORDIUM_NODE_BAKER_CREDENTIALS_FILE=/mnt/baker-0-credentials.json
+      # General node configuration data and config directories (it's OK if they
+      # are the same). This should match the volume mount below. If the location
+      # of the mount inside the container is changed, then these should be
+      # changed accordingly as well.
+      - CONCORDIUM_NODE_DATA_DIR=/mnt/data
+      - CONCORDIUM_NODE_CONFIG_DIR=/mnt/data
+      # The port on which the node will listen for incoming connections. This is a
+      # port inside the container. It is mapped to an external port by the port
+      # mapping in the `ports` section below. If the internal and external ports
+      # are going to be different then you should also set
+      # `CONCORDIUM_NODE_EXTERNAL_PORT` variable to what the external port value is.
+      - CONCORDIUM_NODE_LISTEN_PORT=8169
+      # Address of the V2 GRPC server.
+      - CONCORDIUM_NODE_GRPC2_LISTEN_ADDRESS=0.0.0.0
+      # And its port.
+      - CONCORDIUM_NODE_GRPC2_LISTEN_PORT=20100
+      # Do not bootstrap via DNS.
+      - CONCORDIUM_NODE_CONNECTION_NO_BOOTSTRAP_DNS=true
+      # Enable grpc over http 1.1
+      - CONCORDIUM_NODE_GRPC2_ENABLE_GRPC_WEB=true
+    entrypoint: ["/concordium-node"]
+    # Exposed ports. The ports the node listens on inside the container (defined
+    # by `CONCORDIUM_NODE_LISTEN_PORT` and `CONCORDIUM_NODE_GRPC2_LISTEN_PORT`)
+    # should match what is defined here. When running multiple nodes the
+    # external ports should be changed so as not to conflict.
+    ports:
+      - "8169:8169"
+      - "20100:20100"
+    volumes:
+      # The node's database should be stored in a persistent volume so that it
+      # survives container restart. In this case we map the **host** directory
+      - ./local-node/:/mnt/data:Z
+      - ./chain/bakers/baker-0-credentials.json:/mnt/baker-0-credentials.json:Z
+
+  # a local identity provider
+  identity-provider-service:
+    container_name: identity-provider-service
+    image: concordium/identity-provider-service:0.6.0
+    pull_policy: always
+    platform: linux/amd64
+    ports:
+      - 7011:7011
+    environment:
+      - MODE=identity-provider-service
+      - ANONYMITY_REVOKERS=/mnt/ars/anonymity-revokers.json
+      - IDENTITY_PROVIDER=/mnt/idps/ip-data-0.json
+      - GLOBAL_CONTEXT=/mnt/global/cryptographic-parameters.json
+      - IDENTITY_PROVIDER_SERVICE_PORT=7011
+      - RETRIEVE_BASE=http://localhost:7011
+      - WALLET_PROXY_BASE=http://localhost:7013
+      - ID_VERIFICATION_URL=http://localhost:7012/api/verify
+      - ID_VERIFICATION_QUERY_URL=http://identity-verifier:7012/api/verify
+      - RUST_LOG=info
+    volumes:
+      - ./chain/ars:/mnt/ars
+      - ./chain/global:/mnt/global
+      - ./chain/idps:/mnt/idps
+      - ./identity-provider-service:/database
+
+  # The verifier for the local id service
+  identity-verifier:
+    container_name: identity-verifier
+    image: concordium/identity-provider-service:0.6.0
+    platform: linux/amd64
+    ports:
+      - 7012:7012
+    environment:
+      - MODE=identity-verifier
+      - IDENTITY_VERIFIER_PORT=7012
+      - IDENTITY_PROVIDER_URL=http://localhost:7011
+      - IDENTITY_PROVIDER_PUBLIC=/mnt/idps/ip-data-0.pub.json
+      - RUST_LOG=info
+    volumes:
+      - ./chain/idps:/mnt/idps
+      - ./identity-verifier:/database
+
+  # a postgresql database server to support indexers and loggers
+  localccd-postgres:
+    container_name: localccd-postgres
+    image: postgres:18
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    # ports:
+    #  - 5432:5432
+    volumes:
+      - ./localccd-postgres/data:/var/lib/postgresql/pgdata
+      - ./localccd-postgres/initdb/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      # by insisting on localhost, the init script will need to
+      # have completed (and ccdscan database should exist)
+      # if extra databases are added, always choose the last one
+      # for the following line
+      test: ["CMD-SHELL", "pg_isready -h localhost -U user -d ccdscan"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+  # pgadmin so we can inspect the content of databases
+  pgadmin:
+    depends_on:
+      localccd-postgres:
+        condition: service_healthy
+        restart: true
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: test@company.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - 8432:80
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+
+  # the transaction-logger for the wallet-proxy
+  transaction-logger:
+    depends_on:
+      local-node:
+        condition: service_started
+      localccd-postgres:
+        condition: service_healthy
+        restart: true
+    container_name: transaction-logger
+    image: concordium/transaction-logger:0.14.0
+    platform: linux/amd64
+    environment:
+      TRANSACTION_LOGGER_NODES: http://local-node:20100
+      TRANSACTION_LOGGER_DB_STRING: "host=localccd-postgres port=5432 dbname=wallet-proxy user=user password=password connect_timeout=10"
+      TRANSACTION_LOGGER_LOG_LEVEL: info
+      TRANSACTION_LOGGER_NUM_PARALLEL_QUERIES: 1
+      TRANSACTION_LOGGER_MAX_BEHIND_SECONDS: 600
+
+  # the real wallet-proxy service
+  wallet-proxy:
+    depends_on:
+      local-node:
+        condition: service_started
+      localccd-postgres:
+        condition: service_healthy
+        restart: true
+      transaction-logger:
+        condition: service_started
+    container_name: wallet-proxy
+    image: concordium/wallet-proxy:0.41.1-0
+    platform: linux/amd64
+    environment:
+      GRPC_HOST: local-node
+      GRPC_PORT: 20100
+      DB_HOST: localccd-postgres
+      DB_PORT: 5432
+      DB_NAME: wallet-proxy
+      DB_USER: user
+      DB_PASSWORD: password
+      DROP_ACCOUNT_FILE: /mnt/data/gtu_drop_account.json
+      DROP_AMOUNT: 20000
+      IP_DATA_FILE: /mnt/data/identity_provider_data.json
+      IP_DATA_FILE_V1: /mnt/data/identity_provider_data_v1.json
+      IP_DATA_FILE_V2: /mnt/data/identity_provider_data_v2.json
+      LOG_LEVEL: info
+      TC_VERSION: 2.0.0
+      TC_URL: https://developer.concordium.software/en/mainnet/net/resources/terms-and-conditions.html
+      # TODO: add forced update config files when needed
+      # FORCED_UPDATE_CONFIG_FILE_V0: /mnt/data/forced-update-config-v0.json
+      # FORCED_UPDATE_CONFIG_FILE_V1: /mnt/data/forced-update-config-v1.json
+    ports:
+      - 7013:3000
+    volumes:
+      - ./wallet-proxy/ip-info.json:/mnt/data/identity_provider_data.json
+      - ./wallet-proxy/ip-info.json:/mnt/data/identity_provider_data_v1.json
+      - ./wallet-proxy/ip-info.json:/mnt/data/identity_provider_data_v2.json
+      - ./chain/accounts/localnet-4.json:/mnt/data/gtu_drop_account.json
+      # TODO: add forced update config files when needed
+      # - ./wallet-proxy/forced-update-config-v0.json:/mnt/data/forced-update-config-v0.json
+      # - ./wallet-proxy/forced-update-config-v1.json:/mnt/data/forced-update-config-v1.json
+
+  # The indexer for the ccdscan backend
+  ccdscan-indexer:
+    depends_on:
+      local-node:
+        condition: service_started
+      localccd-postgres:
+        condition: service_healthy
+        restart: true
+    container_name: ccdscan-indexer
+    image: concordium/ccdscan-indexer:2.0.20
+    platform: linux/amd64
+    environment:
+      - CCDSCAN_INDEXER_GRPC_ENDPOINTS=http://local-node:20100
+      - CCDSCAN_INDEVER_DATABASE_URL=postgres://user:password@localccd-postgres:5432/ccdscan
+      - CCDSCAN_INDEXER_LOG_LEVEL=debug
+    command: >
+        /bin/sh -c 'export CCDSCAN_INDEXER_DATABASE_URL="postgres://user:password@localccd-postgres:5432/ccdscan" && ccdscan-indexer --migrate'
+
+  # The ccdscan backend api
+  ccdscan-api:
+    depends_on:
+      ccdscan-indexer:
+        condition: service_started
+    container_name: ccdscan-api
+    image: concordium/ccdscan-api:2.0.20
+    platform: linux/amd64
+    environment:
+      - CCDSCAN_API_ADDRESS=0.0.0.0:8000
+      - CCDSCAN_API_DATABASE_URL=postgres://user:password@localccd-postgres:5432/ccdscan
+      - CCDSCAN_API_NODE_COLLECTOR_BACKEND_ORIGIN=http://localhost
+      - LOG_LEVEL=debug
+    command: >
+        /bin/sh -c 'sleep 20 ; export CCDSCAN_API_DATABASE_URL="postgres://user:password@localccd-postgres:5432/ccdscan" && ccdscan-api'
+    ports:
+      - 7015:8000
+
+  # the ccdscan frontend
+  ccdscan-frontend:
+    depends_on:
+      ccdscan-api:
+        condition: service_started
+    container_name: ccdscan-frontend
+    image: concordium/ccdscan-frontend:1.7.25
+    platform: linux/amd64
+    environment:
+      - NUXT_PUBLIC_API_URL=http://localhost:7015/api/graphql
+      - NUXT_PUBLIC_WS_URL=ws://localhost:7015/ws/graphql
+      - NUXT_PUBLIC_API_URL_RUST=http://localhost:7015/api/graphql
+      - NUXT_PUBLIC_WS_URL_RUST=ws://localhost:7015/ws/graphql
+      - NUXT_PUBLIC_EXPLORER_NAME=Localnet
+      - NUXT_PUBLIC_ENABLE_PLT_FEATURES=true
+    ports:
+      - 7016:3000
+
+  # nginx acting as a webserver for storing token metadata and images
+  webserver:
+    container_name: webserver
+    image: nginx
+    volumes:
+      - ./webserver:/usr/share/nginx/html
+    ports:
+      - 7020:80
+
+#  # The web3id verifier
+#  web3id-verifier:
+#    depends_on:
+#      local-node:
+#        condition: service_started
+#    container_name: web3id-verifier
+#    image: concordium/web3id-verifier:0.7.0
+#    platform: linux/amd64
+#    command: web3id-verifier
+#    environment:
+#      - CONCORDIUM_WEB3ID_VERIFIER_NODE=http://local-node:20100
+#      - CONCORDIUM_WEB3ID_VERIFIER_NETWORK=testnet
+#      - CONCORDIUM_WEB3ID_VERIFIER_LOG_LEVEL=info
+#    ports:
+#      - 7017:8080
+#
+#  # the proof explorer
+#  web3id-proof-explorer:
+#    depends_on:
+#      web3id-verifier:
+#        condition: service_started
+#    container_name: web3id-proof-explorer
+#    image: concordium/proof-explorer:1.2.1
+#    platform: linux/amd64
+#    ports:
+#      - 7018:80
