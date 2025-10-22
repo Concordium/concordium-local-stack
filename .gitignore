@@ -1,0 +1,12 @@
+.DS_Store
+chain/
+identity-provider-service/*/
+identity-verifier/*/
+localccd-postgres/data
+local-node/**/*dat
+local-node/**/*json
+local-node/**/*mdb
+pgadmin/*/
+pgadmin/*.db
+wallet-proxy/*json
+webserver/metadata/*json
