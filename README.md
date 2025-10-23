@@ -37,7 +37,32 @@ brew install jq
 jq --version
 ```
 
-### 3. Install Rust (required for genesis-creator)
+### 3. Download the concordium-client tool
+
+Download the concordium-client tool for your platform from the [developer documentation](https://docs.concordium.com/en/mainnet/tools/concordium-client.html#run-concordium-client).
+
+**Verify installation:**
+```bash
+concordium-client --version
+```
+
+This should display version `9.1.4` or similar.
+
+#### Troubleshooting
+
+**"concordium-client: command not found"**
+
+If you encounter this error, it means your system cannot locate the `concordium-client` binary. Make sure it is in your PATH.
+
+### 4. Get the genesis-creator tool
+
+You can either download or build the genesis-creator tool.
+
+- Option 1: **Build the genesis-creator tool**
+
+You can build the binary from the source code.
+
+#### Install Rust (required for genesis-creator)
 
 If you don't have Rust installed:
 ```bash
@@ -46,7 +71,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 Follow the prompts, then restart your terminal.
 
-### 4. Install genesis-creator
+#### Install genesis-creator
 
 ```bash
 cargo install --git https://github.com/Concordium/concordium-misc-tools genesis-creator
@@ -57,7 +82,26 @@ cargo install --git https://github.com/Concordium/concordium-misc-tools genesis-
 genesis-creator --version
 ```
 
-This should display version `0.5` or similar.
+This should display version `0.6.0` or similar.
+
+- Option 2: **Download the genesis-creator tool (for ubuntu)**
+
+You can instead of building from the source code also download the genesis-creator tool for your platform from some recent [github release artefacts](https://github.com/Concordium/concordium-misc-tools/releases/tag/genesis-creator%2F0.6.0).
+Note: As the binary for `macOS` and `windows` are unsigned, you will get security warnings
+when running the binary on these platforms. If you prefer to build the binary yourself because of that, use the Option 1 above instead.
+
+**Verify installation:**
+```bash
+genesis-creator --version
+```
+
+This should display version `0.6.0` or similar.
+
+#### Troubleshooting
+
+**"genesis-creator: command not found"**
+
+If you encounter this error, it means your system cannot locate the `genesis-creator` binary. Make sure it is in your PATH.
 
 ## Setup Instructions
 
@@ -98,9 +142,12 @@ docker compose logs <service-name>
 
 ### Step 4: Configure the Concordium Wallet
 
-1. **Install the Concordium Wallet for Web** from the [Chrome Web Store](https://chrome.google.com/webstore)
+1. **Install the Concordium Wallet for Web** from the [Chrome Web Store](https://chromewebstore.google.com/detail/concordium-wallet/mnnkpffndmickbiakofclnpoiajlegmg)
 
 2. **Configure the custom network BEFORE setting up your seed phrase:**
+
+![Wallet Network Config](doc-images/network-switch.png)
+
    - Node Address: `http://localhost`
    - Node Port: `20100`
    - Wallet Proxy: `http://localhost:7013`
@@ -177,6 +224,12 @@ docker compose restart
 - **Token Metadata Server**: http://localhost:7020
 - **Node GRPC**: http://localhost:20100
 
+### Source Code of Services
+
+- **Blockchain Node**: [source code](https://github.com/Concordium/concordium-node)
+- **CCDScan Explorer**: [source code](https://github.com/Concordium/concordium-scan)
+- **Wallet Proxy**: [source code](https://github.com/Concordium/concordium-wallet-proxy)
+
 ## Troubleshooting
 
 ### Services won't start
@@ -194,9 +247,6 @@ docker compose logs
 docker compose down -v
 docker compose up --detach
 ```
-
-### "genesis-creator: command not found"
-Make sure Rust's cargo bin directory is in your PATH. Restart your terminal after installing Rust.
 
 ### Platform warnings on Apple Silicon
 Warnings like `The requested image's platform (linux/amd64) does not match` are normal and can be ignored if Rosetta is enabled in Docker Desktop.
