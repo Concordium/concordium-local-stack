@@ -10,3 +10,5 @@ pgadmin/*/
 pgadmin/*.db
 wallet-proxy/*json
 webserver/metadata/*json
+transactions/*
+!transactions/create-plt-template.json
