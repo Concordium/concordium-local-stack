@@ -214,7 +214,7 @@ services:
     environment:
       - CCDSCAN_API_ADDRESS=0.0.0.0:8000
       - CCDSCAN_API_DATABASE_URL=postgres://user:password@localccd-postgres:5432/ccdscan
-      - CCDSCAN_API_NODE_COLLECTOR_BACKEND_ORIGIN=http://localhost
+      - CCDSCAN_API_NODE_COLLECTOR_BACKEND_ORIGIN=http://webserver
       - LOG_LEVEL=debug
     command: >
         /bin/sh -c 'sleep 20 ; export CCDSCAN_API_DATABASE_URL="postgres://user:password@localccd-postgres:5432/ccdscan" && ccdscan-api'
