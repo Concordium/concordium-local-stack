@@ -248,12 +248,11 @@ services:
     ports:
       - 7020:80
 
-  # The web3id verifier
+  # The ZK proof verifier
   web3id-verifier:
     depends_on:
       local-node:
         condition: service_started
-        restart: true
     container_name: web3id-verifier
     image: concordium/web3id-verifier:0.7.0
     platform: linux/amd64
@@ -271,15 +270,15 @@ services:
     ports:
       - 7017:8080
 
-  # # the proof explorer
-  # web3id-proof-explorer:
-  #   depends_on:
-  #     web3id-verifier:
-  #       condition: service_started
-  #   container_name: web3id-proof-explorer
-  #   environment:
-  #     - BACKEND_API=http://web3id-verifier:7017
-  #   image: trytry
-  #   platform: linux/amd64
-  #   ports:
-  #     - 7018:80
+  # The ZK proof explorer
+  web3id-proof-explorer:
+    depends_on:
+      web3id-verifier:
+        condition: service_started
+    container_name: web3id-proof-explorer
+    environment:
+      - BACKEND_API=http://localhost:7017
+    image: concordium/proof-explorer:1.2.2
+    platform: linux/amd64
+    ports:
+      - 7018:80

@@ -223,12 +223,16 @@ docker compose restart
 - **pgAdmin**: http://localhost:8432 (user: `test@company.com`, password: `password`)
 - **Token Metadata Server**: http://localhost:7020
 - **Node GRPC**: http://localhost:20100
+- **ZK (zero knowledge) Verifier Backend**: http://localhost:7017
+- **ZK (zero knowledge) Proof Explorer Frontend**: http://localhost:7018
 
 ### Source Code of Services
 
 - **Blockchain Node**: [source code](https://github.com/Concordium/concordium-node)
 - **CCDScan Explorer**: [source code](https://github.com/Concordium/concordium-scan)
 - **Wallet Proxy**: [source code](https://github.com/Concordium/concordium-wallet-proxy)
+- **ZK (zero knowledge) Verifier Backend**: [source code](https://github.com/Concordium/concordium-web3id/tree/main/services/web3id-verifier)
+- **ZK (zero knowledge) Proof Explorer Frontend**: [source code](https://github.com/Concordium/concordium-web3id/tree/main/test-tools/proof-explorer)
 
 ## Troubleshooting
 
