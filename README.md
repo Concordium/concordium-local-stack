@@ -258,8 +258,15 @@ Warnings like `The requested image's platform (linux/amd64) does not match` are 
 ## Development Tips
 
 - The node data is stored in `./local-node/` and persists between restarts
-- Database data is stored in a Docker volume and persists unless you use `docker compose down -v`
+- Database data is stored in `./localccd-postgres/data` and persists between restarts
 - You can edit token metadata files in `webserver/metadata/` while the services are running
 - CCDScan may take a few moments to sync after startup
+
+### pgadmin
+
+Although pgadmin is automatically configured with a server group `Local CCD Stack` containing the `localccd-postgres` server,
+the first time you access it you will need to enter the password (default `password`).
+![pgadmin password entry](doc-images/pgadmin-password-entry.png)
+
 
 Enjoy building on Concordium! 🚀
