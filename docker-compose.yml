@@ -119,6 +119,8 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: test@company.com
       PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_SERVER_JSON_FILE: /var/lib/pgadmin/servers.json
+      PGADMIN_REPLACE_SERVERS_ON_STARTUP: true
     ports:
       - 8432:80
     volumes:
