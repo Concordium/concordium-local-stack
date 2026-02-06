@@ -39,7 +39,7 @@ jq --version
 
 ### 3. Download the concordium-client tool
 
-Download the concordium-client tool for your platform from the [developer documentation](https://docs.concordium.com/en/mainnet/tools/concordium-client.html#run-concordium-client).
+Download the concordium-client tool for your platform from the [developer documentation](https://docs.concordium.com/en/mainnet/docs/installation/downloads.html#concordium-client-client-version).
 
 **Verify installation:**
 ```bash
@@ -54,48 +54,16 @@ This should display version `9.1.4` or similar.
 
 If you encounter this error, it means your system cannot locate the `concordium-client` binary. Make sure it is in your PATH.
 
-### 4. Get the genesis-creator tool
+### 4. Download the genesis-creator tool
 
-You can either download or build the genesis-creator tool.
-
-- Option 1: **Build the genesis-creator tool**
-
-You can build the binary from the source code.
-
-#### Install Rust (required for genesis-creator)
-
-If you don't have Rust installed:
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-Follow the prompts, then restart your terminal.
-
-#### Install genesis-creator
-
-```bash
-cargo install --git https://github.com/Concordium/concordium-misc-tools genesis-creator
-```
+Download the genesis-creator tool for your platform from the [developer documentation](https://docs.concordium.com/en/mainnet/docs/installation/downloads.html#genesis-creator-tool-genesis-creator-version).
 
 **Verify installation:**
 ```bash
 genesis-creator --version
 ```
 
-This should display version `0.6.0` or similar.
-
-- Option 2: **Download the genesis-creator tool (for ubuntu)**
-
-You can instead of building from the source code also download the genesis-creator tool for your platform from some recent [github release artefacts](https://github.com/Concordium/concordium-misc-tools/releases/tag/genesis-creator%2F0.6.0).
-Note: As the binary for `macOS` and `windows` are unsigned, you will get security warnings
-when running the binary on these platforms. If you prefer to build the binary yourself because of that, use the Option 1 above instead.
-
-**Verify installation:**
-```bash
-genesis-creator --version
-```
-
-This should display version `0.6.0` or similar.
+This should display version `0.8.1` or similar.
 
 #### Troubleshooting
 
