@@ -1,11 +1,13 @@
-# Concordium P9 Localnet
+# Concordium P10 Localnet
 
 This repo provides everything you need to run a local Concordium blockchain for development and testing. The setup includes:
 
-* **P9 Node** with GRPC on port 20100
-* **Test Identity Provider** for wallet ID issuance
+* **P10 Node** with GRPC on port 20100
+* **Node Collector**
 * **Wallet Proxy** on port 7013
+* **Node Collector Backend** on port 7014
 * **CCDScan Explorer** on port 7016
+* **Test Identity Provider** for wallet ID issuance
 * **PostgreSQL Database** supporting wallet proxy & CCDScan
 * **pgAdmin** on port 8432 for database management
 * **Web Server** on port 7020 for PLT token metadata
@@ -48,12 +50,6 @@ concordium-client --version
 
 This should display version `9.1.4` or similar.
 
-#### Troubleshooting
-
-**"concordium-client: command not found"**
-
-If you encounter this error, it means your system cannot locate the `concordium-client` binary. Make sure it is in your PATH.
-
 ### 4. Download the genesis-creator tool
 
 Download the genesis-creator tool for your platform from the [developer documentation](https://docs.concordium.com/en/mainnet/docs/installation/downloads.html#genesis-creator-tool-genesis-creator-version).
@@ -64,6 +60,19 @@ genesis-creator --version
 ```
 
 This should display version `0.8.1` or similar.
+
+#### Upgrading from P9
+If you are upgrading from a P9 local stack:
+1) Update `concordium-client` to the latest version.
+2) Run the shell script `update-to-p10.sh` to perform a protocol update.
+
+(this will be scheduled to be effective 10 minutes after the script runs, and the update will occur after the subsequent epoch)
+
+#### Troubleshooting
+
+**"concordium-client: command not found"**
+
+If you encounter this error, it means your system cannot locate the `concordium-client` binary. Make sure it is in your PATH.
 
 #### Troubleshooting
 
@@ -188,6 +197,7 @@ docker compose restart
 
 - **CCDScan Explorer**: http://localhost:7016
 - **Wallet Proxy**: http://localhost:7013
+- **Node Collector Backend**: http://localhost:7014
 - **pgAdmin**: http://localhost:8432 (user: `test@company.com`, password: `password`)
 - **Token Metadata Server**: http://localhost:7020
 - **Node GRPC**: http://localhost:20100
@@ -196,7 +206,7 @@ docker compose restart
 
 ### Source Code of Services
 
-- **Blockchain Node**: [source code](https://github.com/Concordium/concordium-node)
+- **Blockchain Node & node collector**: [source code](https://github.com/Concordium/concordium-node)
 - **CCDScan Explorer**: [source code](https://github.com/Concordium/concordium-scan)
 - **Wallet Proxy**: [source code](https://github.com/Concordium/concordium-wallet-proxy)
 - **ZK (zero knowledge) Verifier Backend**: [source code](https://github.com/Concordium/concordium-web3id/tree/main/services/web3id-verifier)

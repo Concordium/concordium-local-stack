@@ -3,7 +3,7 @@ services:
   # The validator that runs this network
   local-node:
     container_name: local-node
-    image: concordium/testnet-node:9.0.7-3
+    image: concordium/testnet-node:10.0.5-0
     platform: linux/amd64
     pull_policy: always
     environment:
@@ -42,6 +42,39 @@ services:
       # survives container restart. In this case we map the **host** directory
       - ./local-node/:/mnt/data:Z
       - ./chain/bakers/baker-0-credentials.json:/mnt/baker-0-credentials.json:Z
+
+  # The node collector for the validator
+  node-collector:
+    depends_on:
+      local-node:
+        condition: service_started
+      node-collector-backend:
+        condition: service_started
+    image: concordium/testnet-node:10.0.5-0
+    container_name: local-node-collector
+    platform: linux/amd64
+    pull_policy: always
+    environment:
+      # The node collector backend
+      - CONCORDIUM_NODE_COLLECTOR_NODE_NAME=local-node
+      - CONCORDIUM_NODE_COLLECTOR_GRPC_HOST=http://local-node:20100
+      - CONCORDIUM_NODE_COLLECTOR_URL=http://node-collector-backend:8080/post/nodes
+      - CONCORDIUM_NODE_COLLECTOR_COLLECT_INTERVAL=5000
+    command: ["/node-collector"]
+
+  # the node collector backend
+  node-collector-backend:
+    container_name: node-collector-backend
+    image: concordium/collector-backend:1.1.4-0
+    platform: linux/amd64
+    environment:
+      - MODE=collector_backend
+      - COLLECTOR_BACKEND_STALE_TIME_ALLOWED=600000
+      - COLLECTOR_BACKEND_CLEANUP_INTERVAL=300000
+      - COLLECTOR_BACKEND_VALIDATION_VALIDATE_AGAINST_AVERAGE_AT=1000
+      - COLLECTOR_BACKEND_VALIDATION_VALID_NODE_AVERAGE_PING=1200000
+    ports:
+      - 7014:8080
 
   # a local identity provider
   identity-provider-service:
@@ -135,7 +168,7 @@ services:
         condition: service_healthy
         restart: true
     container_name: transaction-logger
-    image: concordium/transaction-logger:0.14.0
+    image: concordium/transaction-logger:0.17.0
     platform: linux/amd64
     environment:
       TRANSACTION_LOGGER_NODES: http://local-node:20100
@@ -155,7 +188,7 @@ services:
       transaction-logger:
         condition: service_started
     container_name: wallet-proxy
-    image: concordium/wallet-proxy:0.41.1-0
+    image: concordium/wallet-proxy:0.44.0-0
     platform: linux/amd64
     environment:
       GRPC_HOST: local-node
@@ -196,14 +229,14 @@ services:
         condition: service_healthy
         restart: true
     container_name: ccdscan-indexer
-    image: concordium/ccdscan-indexer:2.0.20
+    image: concordium/ccdscan-indexer:2.0.25
     platform: linux/amd64
     environment:
       - CCDSCAN_INDEXER_GRPC_ENDPOINTS=http://local-node:20100
       - CCDSCAN_INDEVER_DATABASE_URL=postgres://user:password@localccd-postgres:5432/ccdscan
       - CCDSCAN_INDEXER_LOG_LEVEL=debug
     command: >
-        /bin/sh -c 'export CCDSCAN_INDEXER_DATABASE_URL="postgres://user:password@localccd-postgres:5432/ccdscan" && ccdscan-indexer --migrate'
+      /bin/sh -c 'export CCDSCAN_INDEXER_DATABASE_URL="postgres://user:password@localccd-postgres:5432/ccdscan" && ccdscan-indexer --migrate'
 
   # The ccdscan backend api
   ccdscan-api:
@@ -211,15 +244,15 @@ services:
       ccdscan-indexer:
         condition: service_started
     container_name: ccdscan-api
-    image: concordium/ccdscan-api:2.0.20
+    image: concordium/ccdscan-api:2.0.25
     platform: linux/amd64
     environment:
       - CCDSCAN_API_ADDRESS=0.0.0.0:8000
       - CCDSCAN_API_DATABASE_URL=postgres://user:password@localccd-postgres:5432/ccdscan
-      - CCDSCAN_API_NODE_COLLECTOR_BACKEND_ORIGIN=http://webserver
+      - CCDSCAN_API_NODE_COLLECTOR_BACKEND_ORIGIN=http://node-collector-backend:8080
       - LOG_LEVEL=debug
     command: >
-        /bin/sh -c 'sleep 20 ; export CCDSCAN_API_DATABASE_URL="postgres://user:password@localccd-postgres:5432/ccdscan" && ccdscan-api'
+      /bin/sh -c 'sleep 20 ; export CCDSCAN_API_DATABASE_URL="postgres://user:password@localccd-postgres:5432/ccdscan" && ccdscan-api'
     ports:
       - 7015:8000
 
@@ -229,15 +262,16 @@ services:
       ccdscan-api:
         condition: service_started
     container_name: ccdscan-frontend
-    image: concordium/ccdscan-frontend:1.7.25
+    image: concordium/ccdscan-frontend:1.7.30
     platform: linux/amd64
     environment:
-      - NUXT_PUBLIC_API_URL=http://localhost:7015/api/graphql
-      - NUXT_PUBLIC_WS_URL=ws://localhost:7015/ws/graphql
-      - NUXT_PUBLIC_API_URL_RUST=http://localhost:7015/api/graphql
-      - NUXT_PUBLIC_WS_URL_RUST=ws://localhost:7015/ws/graphql
-      - NUXT_PUBLIC_EXPLORER_NAME=Localnet
       - NUXT_PUBLIC_ENABLE_PLT_FEATURES=true
+      - NUXT_PUBLIC_EXPLORER_EXTERNAL=""
+      - NUXT_PUBLIC_EXPLORER_NAME=Localnet
+      - NUXT_PUBLIC_API_URL=http://localhost:7015/api/graphql
+      - NUXT_PUBLIC_API_URL_RUST=http://localhost:7015/api/graphql
+      - NUXT_PUBLIC_WS_URL=ws://localhost:7015/ws/graphql
+      - NUXT_PUBLIC_WS_URL_RUST=ws://localhost:7015/ws/graphql
     ports:
       - 7016:3000
 
@@ -268,7 +302,7 @@ services:
     environment:
       - CONCORDIUM_WEB3ID_VERIFIER_NODE=http://local-node:20100
       - CONCORDIUM_WEB3ID_VERIFIER_NETWORK=testnet
-      - CONCORDIUM_WEB3ID_VERIFIER_LOG_LEVEL=info 
+      - CONCORDIUM_WEB3ID_VERIFIER_LOG_LEVEL=info
     ports:
       - 7017:8080
 

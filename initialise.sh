@@ -2,13 +2,16 @@
 
 if ! [ -f local-node/genesis.dat ] ; then
   echo "creating genesis for localnet"
-  genesis-creator generate --config=p9-localnet-genesis.toml
+  genesis-creator generate --config=p10-localnet-genesis.toml
 
   echo "copying genesis.dat for local-node"
   cp chain/genesis.dat local-node/
 
 else
   echo "genesis.dat already exists for local-node, skipping genesis creation"
+  echo "if you just upgraded from the P9 local stack, and want to run P10"
+  echo "run ./update-to-p10.sh with the node running"
+
 fi
 
 echo "Setting up idp public key files"
@@ -23,4 +26,3 @@ if ! [ -d localccd-postgres/data ] ; then
 else
   echo "localccd-postgresql data directory already exists, skipping"
 fi
-

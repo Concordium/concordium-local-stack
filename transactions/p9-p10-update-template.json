@@ -1,0 +1,14 @@
+{
+  "seqNumber": 0,
+  "effectiveTime": 0,
+  "timeout" : 0,
+  "payload": {
+    "updateType": "protocol",
+    "update": {
+      "message": "Protocol-P10",
+      "specificationURL": "https://raw.githubusercontent.com/Concordium/concordium-update-proposals/main/updates/P10.txt",
+      "specificationHash": "6d84de01ccda394638459daa6b9e374094236d3e2e8fd19a51e7136abe77b06d",
+      "specificationAuxiliaryData" : ""
+    }
+  }
+}
