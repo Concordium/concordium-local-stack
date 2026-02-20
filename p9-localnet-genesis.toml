@@ -1,6 +1,6 @@
 # An example genesis configuration file to construct a localnet protocol 9 genesis.
 # This creates a genesis with
-# - 3 bakers
+# - 1 baker (validator)
 # - one additional foundation account
 # - 10 additional localnet accounts
 # - 3 identity providers

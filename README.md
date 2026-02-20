@@ -74,8 +74,6 @@ If you are upgrading from a P9 local stack:
 
 If you encounter this error, it means your system cannot locate the `concordium-client` binary. Make sure it is in your PATH.
 
-#### Troubleshooting
-
 **"genesis-creator: command not found"**
 
 If you encounter this error, it means your system cannot locate the `genesis-creator` binary. Make sure it is in your PATH.
