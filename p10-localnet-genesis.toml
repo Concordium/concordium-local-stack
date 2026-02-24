@@ -1,4 +1,4 @@
-# An example genesis configuration file to construct a localnet protocol 9 genesis.
+# An example genesis configuration file to construct a localnet protocol 10 genesis.
 # This creates a genesis with
 # - 1 baker (validator)
 # - one additional foundation account
@@ -11,7 +11,7 @@
 # - genesis time set to the time when the tool runs
 # - minimum block time set to 1 second
 
-protocolVersion = "9"
+protocolVersion = "10"
 
 [out]
 updateKeys = "./chain/update-keys"
